@@ -1,46 +1,36 @@
-# 使用 Alpine Linux 作为基础镜像
-FROM alpine:latest as builder
+# 使用最小化多阶段构建
+FROM debian:bookworm-slim as base
 
-# 安装必要工具
-RUN apk add --no-cache \
+# 安装核心依赖（兼容 Alpine/CentOS/Ubuntu）
+RUN apt-get update && apt-get install -y \
     curl \
-    tar \
-    jq \
-    && rm -rf /var/cache/apk/*
-
-# 自动获取最新release版本
-RUN LATEST_VERSION=$(curl -sL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r '.tag_name') \
-    && echo "最新检测到版本: $LATEST_VERSION" \
-    && case $(uname -m) in \
-        "x86_64") ARCH=amd64 ;; \
-        "aarch64") ARCH=arm64 ;; \
-        *) echo "不支持的架构"; exit 1 ;; \
-       esac \
-    && curl -LO "https://github.com/MetaCubeX/mihomo/releases/download/${LATEST_VERSION}/mihomo-linux-${ARCH}-${LATEST_VERSION}.gz" \
-    && gunzip "mihomo-linux-${ARCH}-${LATEST_VERSION}.gz" \
-    && mv "mihomo-linux-${ARCH}-${LATEST_VERSION}" /mihomo \
-    && chmod +x /mihomo
-
-# 最终镜像
-FROM alpine:latest
-
-WORKDIR /etc/mihomo
-
-COPY --from=builder /mihomo /usr/local/bin/mihomo
-
-# 安装运行时依赖
-RUN apk add --no-cache \
     ca-certificates \
-    tzdata \
-    && adduser -D -u 1000 mihomo \
-    && mkdir -p /etc/mihomo \
-    && chown -R mihomo:mihomo /etc/mihomo
+    jq \
+    file \
+    && rm -rf /var/lib/apt/lists/*
 
+# 创建分层目录结构
+RUN mkdir -p /app/{bin,cache,config} \
+    && useradd -m -u 1000 mihomo \
+    && chown -R mihomo:mihomo /app
+
+# 设置默认环境变量
+ENV GITHUB_MIRROR="https://github.com" \
+    MIHOMO_HOME="/app/config" \
+    TZ="Asia/Shanghai"
+
+WORKDIR /app
 USER mihomo
 
+# 复制智能启动脚本
+COPY entrypoint.sh /app/
+RUN chmod +x /app/entrypoint.sh
+
+# 暴露常用端口
 EXPOSE 7890 7891 9090
 
+# 健康检查
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD curl -fsS http://127.0.0.1:9090 >/dev/null || exit 1
+    CMD curl -fsS http://localhost:9090 >/dev/null || exit 1
 
-ENTRYPOINT ["mihomo", "run", "-c", "/etc/mihomo/config.yaml"]
+ENTRYPOINT ["/app/entrypoint.sh"]
