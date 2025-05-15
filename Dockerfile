@@ -1,6 +1,8 @@
 # 安装核心依赖
 RUN apt-get update && apt-get install -y \
     curl \
+    wget \
+    inetutils-ping \
     ca-certificates \
     gzip \
     jq \
