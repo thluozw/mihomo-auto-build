@@ -1,5 +1,4 @@
 #!/bin/bash
-# entrypoint.sh
 set -eo pipefail
 
 REPO="MetaCubeX/mihomo"
@@ -7,69 +6,59 @@ BIN_NAME="mihomo"
 INSTALL_DIR="/app/bin"
 CACHE_DIR="/app/cache"
 
-# 处理镜像源
-GITHUB_BASE="${GITHUB_MIRROR:-https://github.com}"
-API_URL="${GITHUB_BASE}/repos/${REPO}/releases/latest"
-
-detect_platform() {
+# 获取系统架构
+get_arch() {
     case $(uname -m) in
         x86_64)  echo "amd64" ;;
         aarch64) echo "arm64" ;;
         armv7l)  echo "armv7" ;;
         i386)    echo "386" ;;
-        *)       echo "Unsupported arch: $(uname -m)" >&2; exit 1 ;;
+        *)       echo "unsupported"; exit 1 ;;
     esac
 }
 
+# 获取最新版本（带重试机制）
 get_latest_version() {
-    local retry=3
-    while [ $retry -gt 0 ]; do
-        response=$(curl -sL -w "%{http_code}" "$API_URL" -o /tmp/response)
-        if [ "$response" -eq 200 ]; then
-            jq -r '.tag_name' /tmp/response | tr -d 'v'
+    for i in {1..3}; do
+        if version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | jq -r '.tag_name'); then
+            echo "$version"
             return 0
         fi
-        retry=$((retry-1))
-        sleep 5
+        sleep $i
     done
-    echo "Failed to get version after 3 retries" >&2
-    exit 1
+    echo "$DEFAULT_VERSION"  # 回退到默认版本
 }
 
-main() {
-    ARCH=$(detect_platform)
+# 主更新逻辑
+update_binary() {
+    ARCH=$(get_arch)
+    CACHE_FILE="${CACHE_DIR}/${BIN_NAME}-${ARCH}.version"
     BIN_PATH="${INSTALL_DIR}/${BIN_NAME}"
-    CACHE_FILE="${CACHE_DIR}/version-${ARCH}.txt"
 
-    echo "⌛ Checking updates..."
+    # 获取版本信息
     LATEST_VERSION=$(get_latest_version)
-    [ -z "$LATEST_VERSION" ] && exit 1
+    echo "⌛ 最新检测版本: $LATEST_VERSION"
 
+    # 检查缓存版本
     if [[ -f "$CACHE_FILE" ]]; then
         CACHED_VERSION=$(cat "$CACHE_FILE")
         if [[ "$LATEST_VERSION" == "$CACHED_VERSION" ]]; then
-            echo "✅ Already latest version: v$LATEST_VERSION"
+            echo "✅ 已是最新版本"
             return 0
         fi
     fi
 
-    echo "🔄 New version found: v$LATEST_VERSION"
-    ASSET_URL="${GITHUB_BASE}/${REPO}/releases/download/v${LATEST_VERSION}/mihomo-linux-${ARCH}-v${LATEST_VERSION}.gz"
-    
-    echo "⏬ Downloading binary..."
-    if ! curl -L -f "$ASSET_URL" -o "/tmp/mihomo.gz"; then
-        echo "❌ Download failed: $ASSET_URL" >&2
-        exit 1
-    fi
-
-    echo "📦 Extracting files..."
+    # 下载并替换二进制
+    echo "🔄 开始更新..."
+    ASSET_URL="https://github.com/${REPO}/releases/download/${LATEST_VERSION}/mihomo-linux-${ARCH}-${LATEST_VERSION}.gz"
+    curl -L -o "/tmp/mihomo.gz" "$ASSET_URL"
     gunzip -c "/tmp/mihomo.gz" > "$BIN_PATH"
     chmod +x "$BIN_PATH"
     echo "$LATEST_VERSION" > "$CACHE_FILE"
-    echo "🎉 Update completed!"
+    echo "🎉 更新完成！"
 }
 
-main || exit 1
-
-echo "🚀 Starting Mihomo..."
-exec "$BIN_PATH" run -c "${MIHOMO_HOME}/config.yaml"
+# 启动流程
+update_binary
+echo "🚀 启动 Mihomo..."
+exec "$INSTALL_DIR/$BIN_NAME" run -c "${MIHOMO_HOME}/config.yaml"
