@@ -1,3 +1,6 @@
+# 必须从 FROM 指令开始
+FROM debian:bookworm-slim
+
 # 安装核心依赖
 RUN apt-get update && apt-get install -y \
     curl \
