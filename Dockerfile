@@ -1,12 +1,9 @@
 # 安装核心依赖
 RUN apt-get update && apt-get install -y \
     curl \
-    # wget \
-    # iputils-ping \
     ca-certificates \
     gzip \
     jq \
-    file \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建目录结构
