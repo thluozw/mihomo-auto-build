@@ -10,14 +10,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建应用目录并设置权限
-RUN mkdir -p /app/{bin,cache,config} \
+RUN mkdir -p /app/bin /app/cache /etc/mihomo \
     && useradd -m -u 1000 mihomo \
-    && chown -R mihomo:mihomo /app
+    && chown -R mihomo:mihomo /app \
+    && chown -R mihomo:mihomo /etc/mihomo
 
-# 设置环境变量
-ENV MIHOMO_HOME="/app/config" \
+# 设置环境变量（注意空值处理）
+ENV MIHOMO_HOME="/etc/mihomo" \
     TZ="Asia/Shanghai" \
-    GITHUB_MIRROR="https://github.com"
+    GITHUB_MIRROR=""
 
 WORKDIR /app
 
