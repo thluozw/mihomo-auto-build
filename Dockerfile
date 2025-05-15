@@ -1,8 +1,8 @@
 # 安装核心依赖
 RUN apt-get update && apt-get install -y \
     curl \
-    wget \
-    #iputils-ping \
+    # wget \
+    # iputils-ping \
     ca-certificates \
     gzip \
     jq \
