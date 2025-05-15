@@ -53,6 +53,7 @@ update_binary() {
     ASSET_URL="https://github.com/${REPO}/releases/download/${LATEST_VERSION}/mihomo-linux-${ARCH}-${LATEST_VERSION}.gz"
     echo "下载地址：$ASSET_URL"
     curl -L -o "/tmp/mihomo.gz" "$ASSET_URL"
+    sleep 5
     gunzip -c "/tmp/mihomo.gz" > "$BIN_PATH"
     chmod +x "$BIN_PATH"
     echo "$LATEST_VERSION" > "$CACHE_FILE"
