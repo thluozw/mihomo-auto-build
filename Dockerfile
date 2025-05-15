@@ -1,10 +1,11 @@
-# 使用多阶段构建优化
+# Dockerfile
 FROM debian:bookworm-slim
 
 # 安装核心依赖
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
+    gzip \
     jq \
     file \
     && rm -rf /var/lib/apt/lists/*
@@ -15,7 +16,7 @@ RUN mkdir -p /app/bin /app/cache /etc/mihomo \
     && chown -R mihomo:mihomo /app \
     && chown -R mihomo:mihomo /etc/mihomo
 
-# 设置环境变量（注意空值处理）
+# 设置环境变量
 ENV MIHOMO_HOME="/etc/mihomo" \
     TZ="Asia/Shanghai" \
     GITHUB_MIRROR=""
@@ -31,7 +32,6 @@ USER mihomo
 # 暴露端口
 EXPOSE 7890 7891 9090
 
-# 健康检查
 HEALTHCHECK --interval=30s --timeout=3s \
     CMD curl -fsS http://localhost:9090 >/dev/null || exit 1
 
