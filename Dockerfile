@@ -2,7 +2,7 @@
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
-    iputils-ping \
+    #iputils-ping \
     ca-certificates \
     gzip \
     jq \
