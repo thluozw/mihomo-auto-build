@@ -51,6 +51,7 @@ update_binary() {
     # 下载并替换二进制
     echo "🔄 开始更新..."
     ASSET_URL="https://github.com/${REPO}/releases/download/${LATEST_VERSION}/mihomo-linux-${ARCH}-${LATEST_VERSION}.gz"
+    echo "下载地址：$ASSET_URL"
     curl -L -o "/tmp/mihomo.gz" "$ASSET_URL"
     gunzip -c "/tmp/mihomo.gz" > "$BIN_PATH"
     chmod +x "$BIN_PATH"
