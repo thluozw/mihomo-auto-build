@@ -16,7 +16,7 @@ RUN mkdir -p /app/{bin,cache} /etc/mihomo \
 
 # 设置环境变量
 ENV MIHOMO_HOME="/etc/mihomo" \
-    GITHUB_MIRROR=""
+    GITHUB_MIRROR=""  \
     TZ="Asia/Shanghai" \
     DEFAULT_VERSION="v1.19.8"  # 硬编码默认版本
 
