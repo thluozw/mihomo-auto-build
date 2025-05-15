@@ -8,7 +8,7 @@ CACHE_DIR="/app/cache"
 
 # 处理镜像源逻辑
 if [[ -n "${GITHUB_MIRROR}" ]]; then
-    GITHUB_BASE="${GITHUB_MIRROR%/}/"
+    GITHUB_BASE="${GITHUB_MIRROR%/}/https://github.com/"
 else
     GITHUB_BASE="https://github.com/"
 fi
@@ -27,7 +27,10 @@ get_arch() {
 # 获取最新版本（带镜像源容错）
 get_latest_version() {
     for i in {1..3}; do
-        API_URL="${GITHUB_BASE}repos/${REPO}/releases/latest"
+        #curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest
+        #API_URL="${GITHUB_BASE}repos/${REPO}/releases/latest"
+        API_URL="https://api.github.com/repos/${REPO}/releases/latest"
+        echo "API_URL：$API_URL \n"
         if version=$(curl -fsSL "$API_URL" | jq -r '.tag_name'); then
             echo "$version"
             return 0
@@ -47,7 +50,7 @@ update_binary() {
 
     # 获取版本信息
     LATEST_VERSION=$(get_latest_version)
-    echo "⌛ 检测到版本: $LATEST_VERSION"
+    echo "⌛ 检测到版本: $LATEST_VERSION \n"
 
     # 版本比对
     if [[ -f "$CACHE_FILE" ]]; then
@@ -60,14 +63,15 @@ update_binary() {
 
     # 下载并替换
     echo "🔄 开始更新..."
+    #https://ghfast.top/https://github.com/MetaCubeX/mihomo/releases/download/v1.19.8/mihomo-linux-arm64-v1.19.8.gz
     ASSET_URL="${GITHUB_BASE}${REPO}/releases/download/${LATEST_VERSION}/mihomo-linux-${ARCH}-${LATEST_VERSION}.gz"
-    echo "下载地址：$ASSET_URL"
+    echo "下载地址：$ASSET_URL \n"
     curl -L -o "/tmp/mihomo.gz" "$ASSET_URL"
     sleep 5
     gunzip -c "/tmp/mihomo.gz" > "$BIN_PATH"
     chmod +x "$BIN_PATH"
-    echo "$LATEST_VERSION" > "$CACHE_FILE"
-    echo "🎉 更新完成！"
+    echo "$LATEST_VERSION" > "$CACHE_FILE \n"
+    echo "🎉 更新完成！ \n"
 }
 
 # 启动流程
