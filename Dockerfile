@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     gzip \
     jq \
+    file \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建目录结构并设置权限
@@ -15,6 +16,7 @@ RUN mkdir -p /app/{bin,cache} /etc/mihomo \
 
 # 设置环境变量
 ENV MIHOMO_HOME="/etc/mihomo" \
+    GITHUB_MIRROR=""
     TZ="Asia/Shanghai" \
     DEFAULT_VERSION="v1.19.8"  # 硬编码默认版本
 
