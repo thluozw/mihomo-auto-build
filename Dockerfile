@@ -25,12 +25,13 @@ RUN mkdir -p /etc/mihomo/{bin,cache} /etc/mihomo
 WORKDIR /etc/mihomo
 
 # 下载并解压最新版mihomo
-RUN arch=$(uname -m); case "$arch" in x86_64) arch="amd64";; aarch64) arch="arm64";; i386) arch="386";; armv7l) arch="arm7";; *) arch="";; esac && \
-    links=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | cut -d'"' -f4 |grep -E '.gz$' |grep 'linux' |grep 'arm64') && \
-    wget --progress=bar:force -o ./mihomo.gz ${links} && \
-    gunzip -c ./mihomo.gz > /etc/mihomo/mihomo && \
-    chmod +x /etc/mihomo/mihomo && \
-    rm -f ./mihomo.gz
+RUN arch=$(uname -m); case "$arch" in x86_64) arch="amd64";; aarch64) arch="arm64";; i386) arch="386";; armv7l) arch="arm7";; *) arch="";; esac 
+    #links=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | cut -d'"' -f4 |grep -E '.gz$' |grep 'linux' |grep 'arm64') && \
+    #wget --progress=bar:force ${links} && \
+    #mv mv ./mihomo-linux*.gz ./mihomo.gz && \
+    #gunzip -c ./mihomo.gz > /etc/mihomo/mihomo && \
+    #chmod +x /etc/mihomo/mihomo && \
+    #rm -f ./mihomo.gz
 
 
 # 复制启动脚本
