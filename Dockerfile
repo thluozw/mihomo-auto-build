@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 
 # 设置环境变量
 ENV TZ="Asia/Shanghai" \
-    GITHUB_MIRROR="" \
+    GITHUB_MIRROR="" 
 
 # 创建目录结构
 RUN mkdir -p /etc/mihomo/{bin,cache} /etc/mihomo
