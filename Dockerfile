@@ -28,7 +28,7 @@ WORKDIR /etc/mihomo
 RUN case $(uname -m) in \
     x86_64) \
         arch="amd64" \
-        ;;
+        ;; \
     i386) \
         arch="386" \
         ;; \
