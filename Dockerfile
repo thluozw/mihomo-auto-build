@@ -23,26 +23,9 @@ RUN mkdir -p /etc/mihomo/{bin,cache} /etc/mihomo
 
 WORKDIR /etc/mihomo
 
-# 下载并解压最新版 mihomo
-ARG TARGETARCH
-RUN arch="unknown"
-case "$TARGETARCH" in
-    linux/amd64) arch="amd64";;
-    linux/arm64) arch="arm64";;
-    linux/386) arch="386";;
-    linux/arm/v7) arch="arm7";;
-    *) echo "Unsupported architecture: $TARGETARCH" && exit 1;;
-esac && \
-echo "Target architecture: $arch" && \
-link=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | \
-    jq -r --arg arch "$arch" '.assets[] | select(.name | endswith(".gz") and contains("linux") and contains($arch)) | .browser_download_url') && \
-if [ -z "$link" ]; then \
-    echo "No matching asset found for architecture: $arch" && exit 1; \
-fi && \
-wget --progress=bar:force "$link" -O mihomo.gz && \
-gunzip -c mihomo.gz > mihomo && \
-chmod +x mihomo && \
-rm -f mihomo.gz
+# 复制并执行安装脚本
+COPY install_mihomo.sh /etc/mihomo/
+RUN chmod +x /etc/mihomo/install_mihomo.sh && /etc/mihomo/install_mihomo.sh
 
 # 获取 Mihomo 版本信息并写入 version.txt
 RUN ./mihomo -v | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 > /etc/mihomo/version.txt
