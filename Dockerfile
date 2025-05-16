@@ -1,5 +1,5 @@
 # 使用多阶段构建
-FROM --platform=$TARGET_PLATFORM debian:bookworm-slim as builder
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim as builder
 
 # 接收构建参数
 ARG TARGET_PLATFORM
