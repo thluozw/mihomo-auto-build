@@ -83,8 +83,6 @@ update_binary() {
     echo "[INFO] 更新完成！"
 }
 
-# 启动流程
-update_binary
 
 # 网络配置（适用于 macvlan）
 # 自动检测 IP 和网关
@@ -101,6 +99,9 @@ if [[ -n "$ETH0_IP" && -n "$ETH0_GATEWAY" ]]; then
     echo "nameserver 223.5.5.5" > /etc/resolv.conf
     echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 fi
+
+# 启动流程
+update_binary
 
 echo "🚀 启动 Mihomo..."
 # 启动 Mihomo
