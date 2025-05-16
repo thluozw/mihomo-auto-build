@@ -1,18 +1,14 @@
-# 必须从 FROM 指令开始
-FROM --platform=$BUILDPLATFORM debian:bookworm-slim
+# 接收构建参数
+ARG TARGET_PLATFORM
 
-# 设置默认值，以防在某些情况下未提供参数
-ARG TARGETPLATFORM
-ARG TARGETOS
-ARG TARGETARCH
+# 使用多阶段构建
+FROM --platform=$TARGET_PLATFORM debian:bookworm-slim as builder
 
 # 将构建参数设置为环境变量
 ENV DOCKER_TARGETPLATFORM=${TARGETPLATFORM} \
-    DOCKER_TARGETOS=${TARGETOS} \
-    DOCKER_TARGETARCH=${TARGETARCH}
 
 # 输出环境变量用于调试
-RUN echo "ℹ️ 当前平台信息: $DOCKER_TARGETPLATFORM, OS: $DOCKER_TARGETOS, ARCH: $DOCKER_TARGETARCH"
+RUN echo "ℹ️ 当前平台信息: $DOCKER_TARGETPLATFORM"
 
 # 安装核心依赖
 RUN apt-get update && \
@@ -40,7 +36,7 @@ WORKDIR /etc/mihomo
 # 复制并执行安装脚本
 COPY install_mihomo.sh /etc/mihomo/
 RUN chmod +x /etc/mihomo/install_mihomo.sh && \
-    bash -c "set -o errexit -o nounset && DOCKER_TARGETPLATFORM=$DOCKER_TARGETPLATFORM DOCKER_TARGETOS=$DOCKER_TARGETOS DOCKER_TARGETARCH=$DOCKER_TARGETARCH /etc/mihomo/install_mihomo.sh"
+    bash -c "set -o errexit -o nounset && DOCKER_TARGETPLATFORM=$DOCKER_TARGETPLATFORM /etc/mihomo/install_mihomo.sh"
 
 # 获取 Mihomo 版本信息并写入 version.txt
 RUN ./mihomo -v | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 > /etc/mihomo/version.txt
