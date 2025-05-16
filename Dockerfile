@@ -35,7 +35,7 @@ RUN get_arch() { \
     esac  \
     }  \
     arch=$(get_arch)
-    links=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | cut -d'"' -f4 |grep -E '.gz$' |grep 'linux' |grep ${arch}) \
+    links="$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | cut -d'"' -f4 |grep -E '.gz$' |grep 'linux' |grep ${arch})" \
     wget ${links} -o ./mihomo.gz \
     gunzip -c ./mihomo.gz > /etc/mihomo/mihomo \
     chmod +x /etc/mihomo/mihomo \
