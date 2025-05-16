@@ -59,8 +59,8 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new
-          build-args: |
-            TARGETARCH=${{ matrix.platform }}
+          # 确保使用 Buildx 进行构建
+          builder: ${{ steps.buildx.outputs.name }}
 
       - name: Move cache
         run: |
