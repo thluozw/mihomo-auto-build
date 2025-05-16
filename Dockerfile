@@ -5,7 +5,7 @@ FROM --platform=$BUILDPLATFORM debian:bookworm-slim as builder
 ARG TARGET_PLATFORM
 
 # 将构建参数设置为环境变量
-ENV DOCKER_TARGETPLATFORM=${TARGETPLATFORM}
+ENV DOCKER_TARGETPLATFORM=${platform}
 
 # 输出环境变量用于调试
 RUN echo "ℹ️ 当前平台信息: $DOCKER_TARGETPLATFORM"
