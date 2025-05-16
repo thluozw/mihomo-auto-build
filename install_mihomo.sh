@@ -3,15 +3,15 @@ set -e  # 一旦出错立即退出
 
 # 输出函数，用于统一格式化输出
 log_info() {
-    echo "ℹ️ ：$1"
+    echo "ℹ️ $1"
 }
 
 log_success() {
-    echo "✅ ：$1"
+    echo "✅ $1"
 }
 
 log_error() {
-    echo "❌ ：$1" >&2
+    echo "❌ $1" >&2
     exit 1
 }
 
@@ -51,11 +51,11 @@ fi
 log_success "下载链接: $link"
 
 # 使用 curl 下载
-log_info " 📥 正在下载 Mihomo..."
+log_info "正在下载 Mihomo..."
 curl -L --progress-bar "$link" -o mihomo.gz || log_error "下载失败，请检查网络连接或重试。"
 
 # 解压
-log_info " 📦 正在解压缩文件..."
+log_info "正在解压缩文件..."
 gunzip -c mihomo.gz > mihomo || log_error "解压缩失败，请检查文件完整性。"
 chmod +x mihomo
 rm -f mihomo.gz
