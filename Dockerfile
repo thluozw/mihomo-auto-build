@@ -38,7 +38,7 @@ RUN links=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/lates
 COPY mihomo.service /etc/systemd/system/mihomo.service
 COPY entrypoint.sh /etc/mihomo/
 RUN chmod +x /etc/mihomo/entrypoint.sh && \
-    chmod +x /etc/systemd/system/mihomo.service && \
+    chmod +x /etc/systemd/system/mihomo.service 
     #systemctl daemon-reload && \
     #systemctl enable mihomo && \
     #systemctl start mihomo
