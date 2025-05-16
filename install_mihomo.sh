@@ -15,18 +15,26 @@ log_error() {
     exit 1
 }
 
+# 读取环境变量
+DOCKER_TARGETPLATFORM=${DOCKER_TARGETPLATFORM:-unknown}
+DOCKER_TARGETOS=${DOCKER_TARGETOS:-unknown}
+DOCKER_TARGETARCH=${DOCKER_TARGETARCH:-unknown}
+
+log_info "目标平台: $DOCKER_TARGETPLATFORM"
+log_info "操作系统: $DOCKER_TARGETOS"
+log_info "架构: $DOCKER_TARGETARCH"
+
 # 根据 TARGETARCH 环境变量设置架构
-TARGETARCH=${TARGETARCH:-linux/amd64}
-arch="unknown"
-case "$TARGETARCH" in
-    linux/amd64) arch="amd64";;
-    linux/arm64) arch="arm64";;
-    linux/386) arch="386";;
-    linux/arm/v7) arch="arm7";;
-    *) log_error "不支持的架构: $TARGETARCH";;
+arch="$DOCKER_TARGETARCH"
+case "$DOCKER_TARGETPLATFORM" in
+    *arm64*) arch="arm64";;
+    *amd64*) arch="amd64";;
+    *386*) arch="386";;
+    *arm/v7*) arch="arm7";;
+    *) log_error "不支持的平台: $DOCKER_TARGETPLATFORM";;
 esac
 
-log_info "目标架构: $arch"
+log_info "最终选择的架构: $arch"
 
 # 获取最新版本信息
 log_info "正在获取 Mihomo 的最新版本信息..."
@@ -37,7 +45,7 @@ fi
 log_success "最新版本: $latest_version"
 
 # 构建精确的下载链接模式
-download_pattern="mihomo-linux-${arch}-${latest_version}.gz"
+download_pattern="mihomo-${DOCKER_TARGETOS}-${arch}-${latest_version}.gz"
 log_info "正在查找匹配的下载链接: $download_pattern"
 
 # 获取下载链接
