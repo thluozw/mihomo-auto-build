@@ -1,92 +1,61 @@
-#!/bin/bash
-set -eo pipefail
+#!/bin/sh
 
-REPO="MetaCubeX/mihomo"
-BIN_NAME="mihomo"
-INSTALL_DIR="/etc/mihomo"
-CACHE_DIR="/etc/mihomo/cache"
+# 启动 cron
+service cron start
 
-# 创建缓存目录
-mkdir -p "$CACHE_DIR"
-chmod 755 "$CACHE_DIR"
-
-# 处理镜像源逻辑
-if [[ -n "${GITHUB_MIRROR}" ]]; then
-    GITHUB_BASE="${GITHUB_MIRROR%/}/"
-else
-    GITHUB_BASE="https://github.com/"
-fi
-
-# 获取系统架构
-get_arch() {
-    case $(uname -m) in
-        x86_64)  echo "amd64" ;;
-        aarch64) echo "arm64" ;;
-        armv7l)  echo "armv7" ;;
-        i386)    echo "386" ;;
-        *)       echo "unsupported"; exit 1 ;;
+# 更新函数
+update_mihomo() {
+    # 获取当前架构
+    TARGETARCH=$(uname -m)
+    case "$TARGETARCH" in
+        x86_64) arch="amd64";;
+        aarch64) arch="arm64";;
+        i386) arch="386";;
+        armv7l) arch="arm7";;
+        *) echo "Unsupported architecture: $TARGETARCH" && exit 1;;
     esac
-}
 
-# 获取最新版本
-get_latest_version() {
-    local version=""
-    for i in {1..2}; do
-        API_URL="https://api.github.com/repos/${REPO}/releases/latest"
-        response=$(curl -fsSL -H "User-Agent: Docker-Mihomo-Installer" "$API_URL" || true)
-        version=$(echo "$response" | jq -r '.tag_name // empty')
-        if [[ -n "$version" ]]; then
-            echo "$version"
-            return 0
+    # 获取最新版本信息
+    latest_version=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r '.tag_name')
+    current_version=$(cat /etc/mihomo/version.txt)
+
+    if [ "$latest_version" != "$current_version" ]; then
+        echo "New version available: $latest_version"
+        
+        # 下载最新版本
+        link=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | \
+            jq -r --arg arch "$arch" '.assets[] | select(.name | endswith(".gz") and contains("linux") and contains($arch)) | .browser_download_url')
+        if [ -z "$link" ]; then
+            echo "No matching asset found for architecture: $arch"
+            exit 1
         fi
-        sleep $i
-    done
-    echo "$DEFAULT_VERSION"
+        
+        wget --progress=bar:force "$link" -O /tmp/mihomo.gz
+        gunzip -c /tmp/mihomo.gz > /etc/mihomo/mihomo
+        chmod +x /etc/mihomo/mihomo
+        rm -f /tmp/mihomo.gz
+        
+        # 更新版本号
+        echo "$latest_version" > /etc/mihomo/version.txt
+        
+        echo "Updated to version $latest_version"
+    else
+        echo "Already on the latest version: $current_version"
+    fi
 }
 
-# 主更新逻辑
-update_binary() {
-    ARCH=$(get_arch)
-    CACHE_FILE="${CACHE_DIR}/${BIN_NAME}-${ARCH}.version"
-    BIN_PATH="${INSTALL_DIR}/${BIN_NAME}"
+# 添加定时任务
+mkdir -p /etc/cron.d
+cat <<EOT > /etc/cron.d/mihomo_update
+# 每天凌晨2点检查更新
+0 2 * * * root /bin/bash -c "/etc/mihomo/update_mihomo" >> /var/log/mihomo_update.log 2>&1
+EOT
 
-    # 获取并验证版本号
-    LATEST_VERSION=$(get_latest_version)
-    if [[ -z "$LATEST_VERSION" ]]; then
-        LATEST_VERSION="$DEFAULT_VERSION"
-        echo "⚠️ 无法获取版本，使用默认: $LATEST_VERSION"
-    fi
+# 确保日志目录存在
+mkdir -p /var/log
 
-    echo "[INFO] 当前有效版本: $LATEST_VERSION"
+# 第一次运行时立即检查更新
+update_mihomo
 
-    # 版本比对
-    if [[ -f "$CACHE_FILE" ]]; then
-        CACHED_VERSION=$(cat "$CACHE_FILE")
-        if [[ "$LATEST_VERSION" == "$CACHED_VERSION" ]]; then
-            echo "[INFO] 已是最新版本"
-            return 0
-        fi
-    fi
-
-    # 动态获取资产名称
-    ASSET_NAME=$(echo "$response" | jq -r --arg arch "$ARCH" '.assets[] | select(.name | contains("linux-" + $arch)) | .name')
-    ASSET_URL="${GITHUB_BASE}${REPO}/releases/download/${LATEST_VERSION}/${ASSET_NAME}"
-
-    # 下载并替换
-    echo "[INFO] 开始更新..."
-    echo "[DEBUG] 下载地址: $ASSET_URL"
-    curl -L -o "/tmp/mihomo.gz" "$ASSET_URL" || { echo "❌ 下载失败"; exit 1; }
-    gunzip -c "/tmp/mihomo.gz" > "$BIN_PATH" || { echo "❌ 解压失败"; exit 1; }
-    chmod +x "$BIN_PATH"
-    echo "$LATEST_VERSION" > "$CACHE_FILE"
-    rm -f "/tmp/mihomo.gz"
-    echo "[INFO] 更新完成！"
-}
-
-
-# 启动流程
-#update_binary
-
-echo "🚀 启动 Mihomo..."
 # 启动 Mihomo
-#exec "$INSTALL_DIR/$BIN_NAME" run -c "${INSTALL_DIR}/config.yaml" --listen 0.0.0.0
+exec /etc/mihomo/mihomo -config /etc/mihomo/config.yaml
