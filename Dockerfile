@@ -2,17 +2,18 @@
 FROM --platform=$BUILDPLATFORM debian:bookworm-slim
 
 # 安装核心依赖
-RUN apt-get update && apt-get install -y \
-    curl \
-    ca-certificates \
-    jq \
-    gzip \
-    iproute2 \
-    net-tools \
-    procps \
-    cron \
-    tzdata \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        ca-certificates \
+        jq \
+        gzip \
+        iproute2 \
+        net-tools \
+        procps \
+        cron \
+        tzdata && \
+    rm -rf /var/lib/apt/lists/*
 
 # 设置环境变量
 ENV TZ="Asia/Shanghai" \
@@ -25,7 +26,8 @@ WORKDIR /etc/mihomo
 
 # 复制并执行安装脚本
 COPY install_mihomo.sh /etc/mihomo/
-RUN chmod +x /etc/mihomo/install_mihomo.sh && /etc/mihomo/install_mihomo.sh
+RUN chmod +x /etc/mihomo/install_mihomo.sh && \
+    bash -c "set -o errexit -o nounset && /etc/mihomo/install_mihomo.sh"
 
 # 获取 Mihomo 版本信息并写入 version.txt
 RUN ./mihomo -v | grep -oP 'v\d+\.\d+\.\d+' | head -n 1 > /etc/mihomo/version.txt
