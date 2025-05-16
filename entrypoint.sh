@@ -85,7 +85,6 @@ update_binary() {
 
 # 启动流程
 update_binary
-echo "🚀 启动 Mihomo..."
 
 # 网络配置（适用于 macvlan）
 # 自动检测 IP 和网关
@@ -99,9 +98,10 @@ if [[ -n "$ETH0_IP" && -n "$ETH0_GATEWAY" ]]; then
     # 设置默认网关
     ip route add default via "$ETH0_GATEWAY"
     # 设置 DNS
-    echo "nameserver 8.8.8.8" > /etc/resolv.conf
-    echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+    echo "nameserver 223.5.5.5" > /etc/resolv.conf
+    echo "nameserver 8.8.8.8" >> /etc/resolv.conf
 fi
 
+echo "🚀 启动 Mihomo..."
 # 启动 Mihomo
 exec "$INSTALL_DIR/$BIN_NAME" run -c "${INSTALL_DIR}/config.yaml" --listen 0.0.0.0
