@@ -60,9 +60,7 @@ jobs:
           cache-to: type=local,dest=/tmp/.buildx-cache-new
           builder: ${{ steps.buildx.outputs.name }}
           build-args: |
-            TARGETPLATFORM=${TARGETPLATFORM}
-            TARGETOS=${TARGETOS}
-            TARGETARCH=${TARGETARCH}
+            TARGET_PLATFORM=${{ matrix.platform }}
 
       - name: Move cache
         run: |
