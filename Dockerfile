@@ -5,10 +5,12 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y \
     curl \
     wget \
-    inetutils-ping \
     ca-certificates \
-    gzip \
     jq \
+    gzip \
+    iproute2 \
+    net-tools \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # 创建目录结构
@@ -26,9 +28,16 @@ WORKDIR /etc/mihomo
 COPY entrypoint.sh /etc/mihomo/
 RUN chmod +x /etc/mihomo/entrypoint.sh
 
+# 添加元数据
+LABEL maintainer="yourname@example.com" \
+      description="Mihomo Docker Image with macvlan support" \
+      version="1.19.8"
+
+# 暴露常用端口（Mihomo 默认使用这些端口）
 EXPOSE 7890 7891 9090
 
-HEALTHCHECK --interval=30s --timeout=3s \
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s \
     CMD curl -fsS http://localhost:9090 >/dev/null || exit 1
 
 ENTRYPOINT ["/etc/mihomo/entrypoint.sh"]
