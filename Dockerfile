@@ -13,20 +13,43 @@ RUN apt-get update && apt-get install -y \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
+
+# 设置环境变量
+ENV TZ="Asia/Shanghai" \
+    GITHUB_MIRROR="" \
+
 # 创建目录结构
 RUN mkdir -p /etc/mihomo/{bin,cache} /etc/mihomo
 
-# 设置环境变量
-ENV MIHOMO_HOME="/etc/mihomo" \
-    TZ="Asia/Shanghai" \
-    GITHUB_MIRROR="" \
-    DEFAULT_VERSION="v1.19.8"
 
 WORKDIR /etc/mihomo
 
+# 下载并解压最新版mihomo
+RUN get_arch() { \
+    case $(uname -m) in  \
+        x86_64)  echo "amd64" ;;  \
+        aarch64) echo "arm64" ;;  \
+        armv7l)  echo "armv7" ;;  \
+        i386)    echo "386" ;;  \
+        *)       echo "unsupported"; exit 1 ;;  \
+    esac  \
+    }  \
+    arch=$(get_arch)
+    links=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | cut -d'"' -f4 |grep -E '.gz$' |grep 'linux' |grep ${arch}) \
+    wget ${links} -o ./mihomo.gz \
+    gunzip -c ./mihomo.gz > /etc/mihomo/mihomo \
+    chmod +x /etc/mihomo/mihomo \
+    rm -f ./mihomo.gz
+
+
 # 复制启动脚本
+COPY mihomo.service /etc/systemd/system/mihomo.service
 COPY entrypoint.sh /etc/mihomo/
-RUN chmod +x /etc/mihomo/entrypoint.sh
+RUN chmod +x /etc/mihomo/entrypoint.sh \
+    chmod +x /etc/systemd/system/mihomo.service \
+    systemctl daemon-reload \
+    systemctl enable mihomo \
+    systemctl start mihomo
 
 # 添加元数据
 LABEL maintainer="yourname@example.com" \
