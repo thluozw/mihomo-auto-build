@@ -15,12 +15,22 @@ esac
 echo "目标架构: $arch"
 
 # 获取最新版本信息
+latest_version=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r '.tag_name')
+echo "最新版本: $latest_version"
+
+# 构建精确的下载链接模式
+download_pattern="mihomo-linux-${arch}-${latest_version}.gz"
+
+# 获取下载链接
 link=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | \
-    jq -r --arg arch "$arch" '.assets[] | select(.name | endswith(".gz") and contains("linux") and contains($arch)) | .browser_download_url')
+    jq -r --arg pattern "$download_pattern" '.assets[] | select(.name == $pattern) | .browser_download_url')
+
 if [ -z "$link" ]; then
-    echo "❌ 未找到匹配的下载链接: $arch"
+    echo "❌ 未找到匹配的下载链接: $download_pattern"
     exit 1
 fi
+
+echo "下载链接: $link"
 
 # 使用 curl 下载
 echo "📥 正在下载 Mihomo: $link"
