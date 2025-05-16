@@ -84,25 +84,9 @@ update_binary() {
 }
 
 
-# 网络配置（适用于 macvlan）
-# 自动检测 IP 和网关
-ETH0_IP=$(ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
-ETH0_GATEWAY=$(ip route show default | awk '{print $3}')
-ETH0_NETMASK=$(ip -4 addr show eth0 | grep -oP '(?<=prefixlen\s)\d+')
-
-if [[ -n "$ETH0_IP" && -n "$ETH0_GATEWAY" ]]; then
-    echo "[INFO] 容器 IP: $ETH0_IP"
-    echo "[INFO] 网关: $ETH0_GATEWAY"
-    # 设置默认网关
-    ip route add default via "$ETH0_GATEWAY"
-    # 设置 DNS
-    echo "nameserver 223.5.5.5" > /etc/resolv.conf
-    echo "nameserver 8.8.8.8" >> /etc/resolv.conf
-fi
-
 # 启动流程
-update_binary
+#update_binary
 
 echo "🚀 启动 Mihomo..."
 # 启动 Mihomo
-exec "$INSTALL_DIR/$BIN_NAME" run -c "${INSTALL_DIR}/config.yaml" --listen 0.0.0.0
+#exec "$INSTALL_DIR/$BIN_NAME" run -c "${INSTALL_DIR}/config.yaml" --listen 0.0.0.0
