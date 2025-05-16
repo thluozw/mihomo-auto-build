@@ -37,15 +37,9 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/mihomo-universal
           tags: |
-            type=raw,value=latest
-            type=ref,event=tag
-
-      - name: Get Latest Version
-        id: version
-        run: |
-          LATEST_VERSION=$(curl -sL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r '.tag_name')
-          echo "version=$LATEST_VERSION" >> $GITHUB_OUTPUT
-
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=semver,pattern={{version}},value=${{ github.ref_name }},enable={{is_default_branch}}
+            
       - name: Build and Push
         uses: docker/build-push-action@v5
         with:
@@ -54,5 +48,15 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+          builder: ${{ steps.buildx.outputs.name }}
+          build-args: |
+            TARGETPLATFORM=${TARGETPLATFORM}
+            TARGETOS=${TARGETOS}
+            TARGETARCH=${TARGETARCH}
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
