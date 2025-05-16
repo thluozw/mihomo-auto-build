@@ -25,16 +25,24 @@ RUN mkdir -p /etc/mihomo/{bin,cache} /etc/mihomo
 WORKDIR /etc/mihomo
 
 # 下载并解压最新版mihomo
-RUN get_arch() { \
-    case $(uname -m) in  \
-        x86_64)  echo "amd64" ;;  \
-        aarch64) echo "arm64" ;;  \
-        armv7l)  echo "armv7" ;;  \
-        i386)    echo "386" ;;  \
-        *)       echo "unsupported"; exit 1 ;;  \
-    esac  \
-    }  \
-    arch=$(get_arch) \
+RUN case $(uname -m) in \
+    x86_64) \
+        arch="amd64" \
+        ;;
+    i386|i686) \
+        arch="386" \
+        ;; \
+    aarch64) \
+        arch="arm64" \
+        ;; \
+    armv7l) \
+        arch="arm7" \
+        ;; \
+    *) \
+        arch="" \
+        ;; \
+    esac \
+    make arch="$arch" \
     links=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | grep browser_download_url | cut -d'"' -f4 |grep -E '.gz$' |grep 'linux' |grep ${arch}) \
     wget ${links} -o ./mihomo.gz \
     gunzip -c ./mihomo.gz > /etc/mihomo/mihomo \
