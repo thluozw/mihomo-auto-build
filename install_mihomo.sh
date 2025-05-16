@@ -16,22 +16,18 @@ log_error() {
 }
 
 # 读取环境变量
-DOCKER_TARGETPLATFORM=${DOCKER_TARGETPLATFORM:-unknown}
-DOCKER_TARGETOS=${DOCKER_TARGETOS:-unknown}
-DOCKER_TARGETARCH=${DOCKER_TARGETARCH:-unknown}
+TARGETPLATFORM=${DOCKER_TARGETPLATFORM}
 
-log_info "目标平台: $DOCKER_TARGETPLATFORM"
-log_info "操作系统: $DOCKER_TARGETOS"
-log_info "架构: $DOCKER_TARGETARCH"
+log_info "目标平台: $TARGETPLATFORM"
 
 # 根据 TARGETARCH 环境变量设置架构
 arch="$DOCKER_TARGETARCH"
-case "$DOCKER_TARGETPLATFORM" in
+case "$TARGETPLATFORM" in
     *arm64*) arch="arm64";;
     *amd64*) arch="amd64";;
     *386*) arch="386";;
     *arm/v7*) arch="arm7";;
-    *) log_error "不支持的平台: $DOCKER_TARGETPLATFORM";;
+    *) log_error "不支持的平台: $TARGETPLATFORM";;
 esac
 
 log_info "最终选择的架构: $arch"
