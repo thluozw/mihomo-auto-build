@@ -29,7 +29,7 @@ RUN case $(uname -m) in \
     x86_64) \
         arch="amd64" \
         ;;
-    i386|i686) \
+    i386) \
         arch="386" \
         ;; \
     aarch64) \
