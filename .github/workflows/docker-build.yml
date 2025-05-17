@@ -114,8 +114,12 @@ jobs:
         file: ./Dockerfile
         platforms: ${{ matrix.target_platform }}
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
+        tags: |
+          ${{ secrets.DOCKERHUB_USERNAME }}/mihomo:${{ matrix.arch }}-latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/mihomo:latest
         build-args: |
           ARCH=${{ matrix.arch }}
+        buildx: |
+          --buildkit-image moby/buildkit:buildx-stable-1
       env:
         DEBUG: true
