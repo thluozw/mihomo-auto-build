@@ -16,15 +16,17 @@ get_latest_version() {
 # 下载并解压二进制文件
 download_and_extract() {
     local arch=$1
-    local asset_name="mihomo-linux-${arch}.gz"
-    local download_url=$(curl -sSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r --arg name "$asset_name" '.assets[] | select(.name == $name) | .browser_download_url')
+    # 匹配包含架构和版本的文件名（如：mihomo-linux-amd64-v1.19.8.gz）
+    local asset_pattern="mihomo-linux-${arch}-v[0-9]+\.[0-9]+\.[0-9]+\.gz"
+    local download_url=$(curl -sSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | \
+        jq -r --arg pattern "$asset_pattern" '.assets[] | select(.name | test($pattern)) | .browser_download_url')
 
     if [ -z "$download_url" ]; then
-        echo -e "\033[31m[错误] 未找到对应架构的资产：$asset_name\033[0m"
+        echo -e "\033[31m[错误] 未找到对应架构的资产：$asset_pattern\033[0m"
         exit 1
     fi
 
-    echo -e "\033[32m[调试] 下载并解压 $asset_name 到 /etc/mihomo...\033[0m"
+    echo -e "\033[32m[调试] 下载并解压 $asset_pattern 到 /etc/mihomo...\033[0m"
     curl -L -o /tmp/mihomo.gz "$download_url"
     gunzip -f /tmp/mihomo.gz
     mv /tmp/mihomo /etc/mihomo/mihomo
@@ -81,8 +83,8 @@ main() {
         echo -e "\033[33m[调试] 本周已更新过，跳过自动更新\033[0m"
     fi
 
-    # 启动mihomo
-    echo -e "\033[32m[调试] 启动 mihomo 服务...\033[0m"
+    # 启动mihomo（使用-d参数指定配置目录）
+    echo -e "\033[32m[调试] 启动 mihomo 服务（配置目录：/etc/mihomo/configs）...\033[0m"
     exec /etc/mihomo/mihomo -d /etc/mihomo/configs
 }
 
