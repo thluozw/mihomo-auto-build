@@ -99,6 +99,15 @@ jobs:
       env:
         DEBUG: true
 
+    - name: Get Metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ secrets.DOCKERHUB_USERNAME }}/mihomo-universal
+        tags: |
+          type=raw,value=latest,enable={{is_default_branch}}
+          type=semver,pattern={{version}},value=${{ github.ref_name }},enable={{is_default_branch}}
+
     - name: 构建并推送镜像
       uses: docker/build-push-action@v2
       with:
@@ -106,9 +115,7 @@ jobs:
         file: ./Dockerfile
         platforms: ${{ matrix.target_platform }}
         push: true
-        tags: |
-          yourdockerhubusername/mihomo:${{ matrix.arch }}-latest
-          yourdockerhubusername/mihomo:latest
+        tags: ${{ steps.meta.outputs.tags }}
         build-args: |
           ARCH=${{ matrix.arch }}
       env:
