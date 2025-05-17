@@ -83,7 +83,7 @@ main() {
 
     # 启动mihomo
     echo -e "\033[32m[调试] 启动 mihomo 服务...\033[0m"
-    exec /etc/mihomo/mihomo -c /etc/mihomo/configs
+    exec /etc/mihomo/mihomo -d /etc/mihomo/configs
 }
 
 # 执行主函数
