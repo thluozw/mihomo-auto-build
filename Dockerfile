@@ -15,7 +15,7 @@ RUN echo -e "\033[32m[调试] 正在创建目录结构...\033[0m" && \
 WORKDIR /etc/mihomo
 EXPOSE 53 7890 7891 9090 443 80 8080 4443
 
-# 复制entrypoint.sh脚本
+# 复制entrypoint.sh脚本到指定目录
 COPY entrypoint.sh /etc/mihomo/entrypoint.sh
 RUN echo -e "\033[32m[调试] 设置entrypoint.sh执行权限...\033[0m" && \
     chmod +x /etc/mihomo/entrypoint.sh
