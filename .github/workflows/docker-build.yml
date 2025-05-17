@@ -92,9 +92,9 @@ jobs:
         curl -L -o mihomo.gz "${{ steps.get_release.outputs.download_url }}"
         echo -e "\033[32m[调试] 解压并重命名二进制文件到 /etc/mihomo/mihomo...\033[0m"
         gunzip -f mihomo.gz
-        sudo ls
-        sudo mv mihomo-linux-${{ matrix.arch }} /etc/mihomo/mihomo
+        sudo mv mihomo /etc/mihomo/mihomo
         sudo chmod +x /etc/mihomo/mihomo
+        sudo mihomo -v
         echo -e "\033[32m[调试] 二进制文件准备就绪：/etc/mihomo/mihomo\033[0m"
       env:
         DEBUG: true
