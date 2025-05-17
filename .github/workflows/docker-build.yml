@@ -80,6 +80,12 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         DEBUG: true
 
+    - name: 创建目标目录
+      run: |
+        echo -e "\033[33m[调试] 创建目标目录 /etc/mihomo...\033[0m"
+        sudo mkdir -p /etc/mihomo
+        sudo chmod 755 /etc/mihomo
+
     - name: 下载并解压 mihomo 二进制文件
       run: |
         echo -e "\033[33m[调试] 正在下载 ${{ matrix.arch }} 架构的 mihomo.gz 文件...\033[0m"
