@@ -83,6 +83,12 @@ main() {
         echo -e "\033[33m[调试] 本周已更新过，跳过自动更新\033[0m"
     fi
 
+    # 创建软链接（如果不存在）
+    if [ ! -L "/etc/mihomo/ui" ]; then
+      echo "\033[32m[调试] 创建软链接 /etc/mihomo/ui -> /etc/mihomo/configs/ui"
+      ln -s /etc/mihomo/configs/ui /etc/mihomo/ui
+    fi
+
     # 启动mihomo（使用-d参数指定配置目录）
     echo -e "\033[32m[调试] 启动 mihomo 服务（配置目录：/etc/mihomo/configs）...\033[0m"
     exec /etc/mihomo/mihomo -d /etc/mihomo/configs
