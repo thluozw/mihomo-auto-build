@@ -1,63 +1,90 @@
 #!/bin/sh
+set -e
 
-# 启动 cron 服务
-service cron start
+# 获取容器内mihomo的版本号
+get_current_version() {
+    local version=$(mihomo -v 2>/dev/null | grep -oP 'v\d+\.\d+\.\d+')
+    echo "$version"
+}
 
-# 更新 Mihomo 函数
-update_mihomo() {
-    # 获取当前架构
-    TARGETARCH=$(uname -m)
-    case "$TARGETARCH" in
-        x86_64) arch="amd64";;
-        aarch64) arch="arm64";;
-        i386) arch="386";;
-        armv7l) arch="arm7";;
-        *) echo "不支持的架构: $TARGETARCH" && exit 1;;
-    esac
+# 获取GitHub最新版本号
+get_latest_version() {
+    local latest_version=$(curl -sSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r .tag_name)
+    echo "$latest_version"
+}
 
-    # 获取最新版本信息
-    latest_version=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r '.tag_name')
-    current_version=$(cat /etc/mihomo/version.txt)
+# 下载并解压二进制文件
+download_and_extract() {
+    local arch=$1
+    local asset_name="mihomo-linux-${arch}.gz"
+    local download_url=$(curl -sSL https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | jq -r --arg name "$asset_name" '.assets[] | select(.name == $name) | .browser_download_url')
 
-    if [ "$latest_version" != "$current_version" ]; then
-        echo "检测到新版本: $latest_version"
-        
-        # 下载最新版本
-        link=$(curl -s https://api.github.com/repos/MetaCubeX/mihomo/releases/latest | \
-            jq -r --arg arch "$arch" '.assets[] | select(.name | endswith(".gz") and contains("linux") and contains($arch)) | .browser_download_url')
-        if [ -z "$link" ]; then
-            echo "未找到匹配的下载链接: $arch"
-            exit 1
-        fi
-        
-        wget --progress=bar:force "$link" -O /tmp/mihomo.gz
-        gunzip -c /tmp/mihomo.gz > /etc/mihomo/mihomo
-        chmod +x /etc/mihomo/mihomo
-        rm -f /tmp/mihomo.gz
-        
-        # 更新版本号
-        echo "$latest_version" > /etc/mihomo/version.txt
-        
-        echo "已更新至版本: $latest_version"
+    if [ -z "$download_url" ]; then
+        echo -e "\033[31m[错误] 未找到对应架构的资产：$asset_name\033[0m"
+        exit 1
+    fi
+
+    echo -e "\033[32m[调试] 下载并解压 $asset_name 到 /etc/mihomo...\033[0m"
+    curl -L -o /tmp/mihomo.gz "$download_url"
+    gunzip -f /tmp/mihomo.gz
+    mv /tmp/mihomo /etc/mihomo/mihomo
+    chmod +x /etc/mihomo/mihomo
+}
+
+# 检查是否需要更新
+check_update() {
+    local current_version=$(get_current_version)
+    local latest_version=$(get_latest_version)
+
+    if [ -z "$current_version" ]; then
+        echo -e "\033[33m[调试] 当前版本未知，强制更新\033[0m"
+        return 0
+    fi
+
+    if [ "$current_version" != "$latest_version" ]; then
+        echo -e "\033[32m[调试] 检测到新版本：$latest_version（当前版本：$current_version）\033[0m"
+        return 0
     else
-        echo "已是最新版本: $current_version"
+        echo -e "\033[33m[调试] 当前已是最新版本：$current_version\033[0m"
+        return 1
     fi
 }
 
-# 添加定时任务
-mkdir -p /etc/cron.d
-cat <<EOT > /etc/cron.d/mihomo_update
-# 每天凌晨2点检查更新
-0 2 * * * root /bin/bash -c "/etc/mihomo/update_mihomo" >> /var/log/mihomo_update.log 2>&1
-EOT
+# 自动更新逻辑
+auto_update() {
+    local arch=$1
+    if check_update; then
+        echo -e "\033[32m[调试] 开始更新 mihomo...\033[0m"
+        download_and_extract "$arch"
+        echo -e "\033[32m[调试] 更新完成，重启服务...\033[0m"
+        # 重启服务（通过重新运行自身脚本实现）
+        exec "$0" "$@"
+    fi
+}
 
-# 确保日志目录存在
-mkdir -p /var/log
+# 主函数
+main() {
+    local arch=$(uname -m)
 
-# 第一次运行时立即检查更新
-echo "正在检查是否有可用的更新..."
-update_mihomo
+    # 根据架构映射到GitHub的平台名称
+    case "$arch" in
+        x86_64) arch=amd64 ;;
+        aarch64) arch=arm64 ;;
+        arm) arch=armv7 ;;
+        *) echo -e "\033[31m[错误] 不支持的架构：$arch\033[0m"; exit 1 ;;
+    esac
 
-# 启动 Mihomo
-echo "启动 Mihomo..."
-exec /etc/mihomo/mihomo -config /etc/mihomo/config.yaml
+    # 自动更新（每周检查一次）
+    if [ "$(date +\%u)" = "1" ]; then
+        auto_update "$arch"
+    else
+        echo -e "\033[33m[调试] 本周已更新过，跳过自动更新\033[0m"
+    fi
+
+    # 启动mihomo
+    echo -e "\033[32m[调试] 启动 mihomo 服务...\033[0m"
+    exec /etc/mihomo/mihomo -c /etc/mihomo/configs
+}
+
+# 执行主函数
+main
