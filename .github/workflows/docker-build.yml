@@ -115,8 +115,8 @@ jobs:
         platforms: ${{ matrix.target_platform }}
         push: true
         tags: |
-          ${{ secrets.DOCKERHUB_USERNAME }}/mihomo-universa:${{ matrix.arch }}-latest
-          ${{ secrets.DOCKERHUB_USERNAME }}/mihomo-universa:latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/mihomo-universal:${{ matrix.arch }}-latest
+          ${{ secrets.DOCKERHUB_USERNAME }}/mihomo-universal:latest
         build-args: |
           ARCH=${{ matrix.arch }}
         buildx: |
