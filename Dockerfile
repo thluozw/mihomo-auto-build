@@ -16,9 +16,9 @@ WORKDIR /etc/mihomo
 EXPOSE 53 7890 7891 9090 443 80 8080 4443
 
 # 复制entrypoint.sh脚本
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY entrypoint.sh /etc/mihomo/entrypoint.sh
 RUN echo -e "\033[32m[调试] 设置entrypoint.sh执行权限...\033[0m" && \
-    chmod +x /usr/local/bin/entrypoint.sh
+    chmod +x /etc/mihomo/entrypoint.sh
 
 # 设置启动入口
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["/etc/mihomo/entrypoint.sh"]
