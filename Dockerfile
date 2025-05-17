@@ -13,7 +13,7 @@ RUN echo -e "\033[32m[调试] 正在创建目录结构...\033[0m" && \
 
 # 设置工作目录并暴露端口
 WORKDIR /etc/mihomo
-EXPOSE 53 7890 7891 9090 443 80 8080 4443
+EXPOSE 53 7890 7891 7892 9090 443 80 8080 4443
 
 # 复制mihomo到指定目录
 COPY mihomo /etc/mihomo/mihomo
