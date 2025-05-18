@@ -85,7 +85,7 @@ main() {
 
     # 创建软链接
     echo -e "\033[32m[调试] 创建软链接 /etc/mihomo/ui -> /etc/mihomo/configs/ui"
-    mv -f /etc/mihomo/configs/ui
+    rm -f /etc/mihomo/configs/ui
     ln -s /etc/mihomo/ui /etc/mihomo/configs/ui
 
     # 启动mihomo（使用-d参数指定配置目录）
